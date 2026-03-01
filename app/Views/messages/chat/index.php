@@ -292,6 +292,7 @@ if (get_setting("module_chat") && $can_chat) {
             appAjaxRequest({
                 url: "<?php echo get_uri("messages/get_chatlist_of_user"); ?>",
                 type: "POST",
+                timeout: 10000,
                 data: {
                     user_id: user_id,
                     tab_type: tab_type
@@ -325,6 +326,7 @@ if (get_setting("module_chat") && $can_chat) {
 
             appAjaxRequest({
                 url: "<?php echo get_uri("messages/chat_list"); ?>",
+                timeout: 10000,
                 data: {
                     type: "inbox"
                 },
@@ -369,6 +371,7 @@ if (get_setting("module_chat") && $can_chat) {
             appAjaxRequest({
                 url: "<?php echo get_uri('messages/get_active_chat'); ?>",
                 type: "POST",
+                timeout: 10000,
                 data: {
                     message_id: message_id
                 },
