@@ -298,6 +298,14 @@ if (get_setting("module_chat") && $can_chat) {
                 },
                 success: function(response) {
                     $("#js-rise-chat-wrapper").html(response);
+                },
+                error: function() {
+                    // Prevent stuck overlay if the request fails.
+                    setChatIcon("open");
+                    setCookie("chatbox_open", "");
+                    setCookie("active_chat_id", "");
+                },
+                complete: function() {
                     appLoader.hide();
                 }
             });
@@ -330,6 +338,14 @@ if (get_setting("module_chat") && $can_chat) {
                     } else if (trigger_from_user_chat === "clients") {
                         $("#chat-clients-tab-button").find("a").trigger("click");
                     }
+                },
+                error: function() {
+                    // Prevent stuck overlay if the request fails.
+                    setChatIcon("open");
+                    setCookie("chatbox_open", "");
+                    setCookie("active_chat_id", "");
+                },
+                complete: function() {
                     appLoader.hide();
                 }
             });
@@ -358,7 +374,6 @@ if (get_setting("module_chat") && $can_chat) {
                 },
                 success: function(response) {
                     $("#js-rise-chat-wrapper").html(response);
-                    appLoader.hide();
                     setCookie("active_chat_id", message_id);
                     $("#js-chat-message-textarea").focus();
 
@@ -366,6 +381,15 @@ if (get_setting("module_chat") && $can_chat) {
                     setTimeout(function() {
                         resizableHandles("#js-rise-chat-wrapper");
                     }, 200);
+                },
+                error: function() {
+                    // Prevent stuck overlay if the request fails.
+                    setChatIcon("open");
+                    setCookie("chatbox_open", "");
+                    setCookie("active_chat_id", "");
+                },
+                complete: function() {
+                    appLoader.hide();
                 }
             });
 
