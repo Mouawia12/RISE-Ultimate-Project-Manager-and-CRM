@@ -68,6 +68,21 @@
         <?php } ?>
 
         <?php
+        $active_locale = service("request")->getLocale();
+        $language_dropdown = get_language_list();
+        ?>
+        <div class="mt20 d-flex align-items-center justify-content-center gap-2">
+            <span class="text-off"><?php echo app_lang("language"); ?>:</span>
+            <select id="signin-language-switcher" class="form-select form-select-sm w-auto">
+                <?php foreach ($language_dropdown as $language_key => $language_label) { ?>
+                    <option value="<?php echo $language_key; ?>" <?php echo $active_locale === $language_key ? "selected" : ""; ?>>
+                        <?php echo $language_label; ?>
+                    </option>
+                <?php } ?>
+            </select>
+        </div>
+
+        <?php
         app_hooks()->do_action('app_hook_signin_extension');
         ?>
     </div>
@@ -77,5 +92,10 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $("#signin-form").appForm({ajaxSubmit: false, isModal: false});
+
+        $("#signin-language-switcher").on("change", function () {
+            var selectedLanguage = $(this).val();
+            window.location.href = "<?php echo get_uri("signin/switch_language"); ?>/" + encodeURIComponent(selectedLanguage);
+        });
     });
 </script>    

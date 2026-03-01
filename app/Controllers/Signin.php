@@ -12,6 +12,16 @@ class Signin extends App_Controller {
         parent::__construct();
         $this->signin_validation_errors = array();
         helper('email');
+        $this->apply_public_language();
+    }
+
+    private function apply_public_language() {
+        $selected_language = strtolower((string) $this->session->get("public_language"));
+        $available_languages = get_language_list("list");
+
+        if ($selected_language && in_array($selected_language, $available_languages)) {
+            service('request')->setLocale($selected_language);
+        }
     }
 
     function index() {
@@ -103,6 +113,17 @@ class Signin extends App_Controller {
 
     function sign_out() {
         $this->Users_model->sign_out();
+    }
+
+    function switch_language($language = "") {
+        $available_languages = get_language_list("list");
+        $language = strtolower(clean_data($language));
+
+        if ($language && in_array($language, $available_languages)) {
+            $this->session->set("public_language", $language);
+        }
+
+        app_redirect("signin");
     }
 
     //send an email to users mail with reset password link
