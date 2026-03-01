@@ -72,6 +72,16 @@ if (get_setting("module_chat") && $can_chat) {
                 isChatBoxOpen = getCookie("chatbox_open"),
                 $chatIcon = $("#js-init-chat-icon");
 
+            // Prevent stale chat state from auto-opening a stuck blank panel after reload/login.
+            // Keep chat closed by default; user can open it manually from the mail icon.
+            if (isChatBoxOpen) {
+                setCookie("chatbox_open", "");
+                setCookie("active_chat_id", "");
+                isChatBoxOpen = "";
+                activeChatId = "";
+                setChatIcon("open");
+            }
+
             $chatIcon.click(function() {
                 $("#js-rise-chat-wrapper").html("");
 
@@ -121,15 +131,7 @@ if (get_setting("module_chat") && $can_chat) {
                 feather.replace();
             });
 
-            //open chat box
-            if (isChatBoxOpen) {
-
-                if (activeChatId) {
-                    getActiveChat(activeChatId);
-                } else {
-                    loadChatTabs();
-                }
-            }
+            // Do not auto-open chat from stale cookies.
 
             var windowSize = window.matchMedia("(max-width: 767px)");
             if (windowSize.matches) {
@@ -280,6 +282,31 @@ if (get_setting("module_chat") && $can_chat) {
             $('.rise-chat-body').height(chatBoxHeight - (headerHeight + footerHeight));
         }
 
+        function resetStuckChatState() {
+            setChatIcon("open");
+            setCookie("chatbox_open", "");
+            setCookie("active_chat_id", "");
+            $("#js-rise-chat-wrapper").addClass("hide").html("");
+            appLoader.hide();
+        }
+
+        function isValidChatResponse(response) {
+            if (!response) {
+                return false;
+            }
+
+            var normalizedResponse = String(response);
+            if (
+                normalizedResponse.indexOf('id="chat-inbox-tab-button"') === -1 &&
+                normalizedResponse.indexOf('id="js-chat-team-members-list"') === -1 &&
+                normalizedResponse.indexOf('id="js-active-chat"') === -1
+            ) {
+                return false;
+            }
+
+            return true;
+        }
+
         function getChatlistOfUser(user_id, tab_type) {
 
             setChatIcon("close"); //show close icon
@@ -298,13 +325,18 @@ if (get_setting("module_chat") && $can_chat) {
                     tab_type: tab_type
                 },
                 success: function(response) {
-                    $("#js-rise-chat-wrapper").html(response);
+                    try {
+                        if (!isValidChatResponse(response)) {
+                            resetStuckChatState();
+                            return;
+                        }
+                        $("#js-rise-chat-wrapper").removeClass("hide").html(response);
+                    } catch (e) {
+                        resetStuckChatState();
+                    }
                 },
                 error: function() {
-                    // Prevent stuck overlay if the request fails.
-                    setChatIcon("open");
-                    setCookie("chatbox_open", "");
-                    setCookie("active_chat_id", "");
+                    resetStuckChatState();
                 },
                 complete: function() {
                     appLoader.hide();
@@ -331,21 +363,27 @@ if (get_setting("module_chat") && $can_chat) {
                     type: "inbox"
                 },
                 success: function(response) {
-                    $("#js-rise-chat-wrapper").html(response);
+                    try {
+                        if (!isValidChatResponse(response)) {
+                            resetStuckChatState();
+                            return;
+                        }
 
-                    if (!trigger_from_user_chat) {
-                        $("#chat-inbox-tab-button a").trigger("click");
-                    } else if (trigger_from_user_chat === "team_members") {
-                        $("#chat-users-tab-button").find("a").trigger("click");
-                    } else if (trigger_from_user_chat === "clients") {
-                        $("#chat-clients-tab-button").find("a").trigger("click");
+                        $("#js-rise-chat-wrapper").removeClass("hide").html(response);
+
+                        if (!trigger_from_user_chat) {
+                            $("#chat-inbox-tab-button a").trigger("click");
+                        } else if (trigger_from_user_chat === "team_members") {
+                            $("#chat-users-tab-button").find("a").trigger("click");
+                        } else if (trigger_from_user_chat === "clients") {
+                            $("#chat-clients-tab-button").find("a").trigger("click");
+                        }
+                    } catch (e) {
+                        resetStuckChatState();
                     }
                 },
                 error: function() {
-                    // Prevent stuck overlay if the request fails.
-                    setChatIcon("open");
-                    setCookie("chatbox_open", "");
-                    setCookie("active_chat_id", "");
+                    resetStuckChatState();
                 },
                 complete: function() {
                     appLoader.hide();
@@ -376,20 +414,26 @@ if (get_setting("module_chat") && $can_chat) {
                     message_id: message_id
                 },
                 success: function(response) {
-                    $("#js-rise-chat-wrapper").html(response);
-                    setCookie("active_chat_id", message_id);
-                    $("#js-chat-message-textarea").focus();
+                    try {
+                        if (!isValidChatResponse(response)) {
+                            resetStuckChatState();
+                            return;
+                        }
 
-                    //append resizable handles
-                    setTimeout(function() {
-                        resizableHandles("#js-rise-chat-wrapper");
-                    }, 200);
+                        $("#js-rise-chat-wrapper").removeClass("hide").html(response);
+                        setCookie("active_chat_id", message_id);
+                        $("#js-chat-message-textarea").focus();
+
+                        //append resizable handles
+                        setTimeout(function() {
+                            resizableHandles("#js-rise-chat-wrapper");
+                        }, 200);
+                    } catch (e) {
+                        resetStuckChatState();
+                    }
                 },
                 error: function() {
-                    // Prevent stuck overlay if the request fails.
-                    setChatIcon("open");
-                    setCookie("chatbox_open", "");
-                    setCookie("active_chat_id", "");
+                    resetStuckChatState();
                 },
                 complete: function() {
                     appLoader.hide();
