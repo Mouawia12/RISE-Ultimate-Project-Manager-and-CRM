@@ -1,0 +1,4 @@
+
+# Exclude vendor docs that trigger GitHub secret scanning
+app/ThirdParty/**/README*
+app/ThirdParty/**/*.md
